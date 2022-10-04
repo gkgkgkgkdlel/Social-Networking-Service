@@ -70,7 +70,6 @@ class UpdatePostView(APIView):
             return Response(
                 {"message": "NO ACCESS"}, status=status.HTTP_201_CREATED
             )
-        print("post_obj는 ", post_obj)
 
         if data.get("hashtags"):
             hashtags = data["hashtags"]
@@ -113,3 +112,27 @@ class UpdatePostView(APIView):
                 return Response(
                     {"message": "FAILED"}, status=status.HTTP_400_BAD_REQUEST
                 )
+
+
+@permission_classes((AllowAny,))
+class DeletePostView(APIView):
+    def delete(self, request, post_id):
+        """
+        게시글 삭제 api.
+        """
+        user_id = User.objects.get(email=request.user).id
+
+        post_obj = None
+
+        try:
+            post_obj = Post.objects.get(id=post_id, user_id=user_id)
+
+        except Post.DoesNotExist:
+
+            return Response(
+                {"message": "NO ACCESS"}, status=status.HTTP_201_CREATED
+            )
+
+        post_obj.delete()
+
+        return Response({"message": "SUCCESS"}, status=status.HTTP_200_OK)
