@@ -64,7 +64,9 @@ class UpdatePostView(APIView):
         post_obj = None
 
         try:
-            post_obj = Post.objects.get(id=post_id, user_id=data["user_id"])
+            post_obj = Post.objects.get(
+                id=post_id, user_id=data["user_id"], is_active=True
+            )
 
         except Post.DoesNotExist:
             return Response(
@@ -132,7 +134,7 @@ class DeletePostView(APIView):
             return Response(
                 {"message": "NO ACCESS"}, status=status.HTTP_201_CREATED
             )
-
-        post_obj.delete()
+        post_obj.is_active = not post_obj.is_active
+        post_obj.save()
 
         return Response({"message": "SUCCESS"}, status=status.HTTP_200_OK)
