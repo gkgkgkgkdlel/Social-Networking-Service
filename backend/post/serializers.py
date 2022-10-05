@@ -5,7 +5,7 @@ from .models import Post, HashTag
 class HashTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = HashTag
-        fields = ["title", "content", "hashtags", "user_id"]
+        fields = ["name"]
 
 
 class PostSerializer(serializers.ModelSerializer):
