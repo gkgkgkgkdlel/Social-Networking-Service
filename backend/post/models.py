@@ -8,7 +8,7 @@ class Post(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
     hashtags = models.ManyToManyField("HashTag", blank=True)
-    like_count = models.IntegerField(default=0)
+    like_count = models.ManyToManyField(to=User, related_name="+", blank=True)
     view_count = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
