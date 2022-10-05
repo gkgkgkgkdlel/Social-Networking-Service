@@ -10,4 +10,5 @@ urlpatterns = [
     path("read/detail/<int:post_id>/", views.DetailPostView.as_view()),
     path("like_count/<int:post_id>/", views.LikeCountPostView.as_view()),
     path("list/", views.PostListView.as_view()),
+    path("search/", views.PostSearchOrderView.as_view()),
 ]

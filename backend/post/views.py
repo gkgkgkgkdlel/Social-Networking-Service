@@ -7,10 +7,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
 from .serializers import PostListSerializer, PostSerializer
 import json
-import bcrypt
-import re
 from .models import Post, HashTag
 from user.models import User
+from django.db.models import Q
 
 
 @permission_classes((AllowAny,))
@@ -189,6 +188,46 @@ class PostListView(APIView):
         게시글 목록 api.
         """
         query_set = Post.objects.all()
+        serializers = PostListSerializer(query_set, many=True)
+
+        return Response(serializers.data, status=status.HTTP_200_OK)
+
+
+@permission_classes((AllowAny,))
+class PostSearchOrderView(APIView):
+    def get(self, request):
+        """
+        게시글 정렬, 검색 api.
+        """
+
+        orderby = request.GET.get("orderby", None)
+        search = request.GET.get("search", None)
+        hashtag = request.GET.get("hashtag", None)
+
+        query_set = Post.objects.all()
+
+        if orderby is None:
+            query_set = query_set.order_by("-created_at")
+
+        else:
+            query_set = query_set.order_by(orderby)
+
+        if search is not None:
+            search = search.replace('"', "")
+            query_set = query_set.filter(
+                Q(title__contains=search) | Q(content__contains=search)
+            )
+
+        if hashtag is not None:
+            hashtag = hashtag.replace('"', "")
+            try:
+                tag_id = HashTag.objects.get(name=hashtag).id
+                query_set = query_set.filter(hashtags__in=[tag_id])
+            except HashTag.DoesNotExist:
+                return Response(
+                    {"message": "No Data"}, status=status.HTTP_201_CREATED
+                )
+
         serializers = PostListSerializer(query_set, many=True)
 
         return Response(serializers.data, status=status.HTTP_200_OK)
