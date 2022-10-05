@@ -10,6 +10,12 @@ import json
 from .models import Post, HashTag
 from user.models import User
 from django.db.models import Q
+from rest_framework.pagination import PageNumberPagination
+from .pagination import PaginationHandlerMixin
+
+
+class PostPagination(PageNumberPagination):
+    page_size = 10
 
 
 @permission_classes((AllowAny,))
@@ -182,19 +188,37 @@ class LikeCountPostView(APIView):
 
 
 @permission_classes((AllowAny,))
-class PostListView(APIView):
+class PostListView(APIView, PaginationHandlerMixin):
+    pagination_class = PostPagination
+    serializer_class = PostListSerializer
+
     def get(self, request):
         """
         게시글 목록 api.
         """
-        query_set = Post.objects.all()
-        serializers = PostListSerializer(query_set, many=True)
+        post_number = request.GET.get(
+            "post_number", self.pagination_class.page_size
+        )
+        self.pagination_class.page_size = post_number
 
-        return Response(serializers.data, status=status.HTTP_200_OK)
+        query_set = Post.objects.all()
+        page = self.paginate_queryset(query_set)
+
+        if page is not None:
+            serializer = self.get_paginated_response(
+                self.serializer_class(page, many=True).data
+            )
+        else:
+            serializer = self.serializer_class(query_set, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @permission_classes((AllowAny,))
-class PostSearchOrderView(APIView):
+class PostSearchOrderView(APIView, PaginationHandlerMixin):
+    pagination_class = PostPagination
+    serializer_class = PostListSerializer
+
     def get(self, request):
         """
         게시글 정렬, 검색 api.
@@ -203,6 +227,10 @@ class PostSearchOrderView(APIView):
         orderby = request.GET.get("orderby", None)
         search = request.GET.get("search", None)
         hashtag = request.GET.get("hashtag", None)
+        post_number = request.GET.get(
+            "post_number", self.pagination_class.page_size
+        )
+        self.pagination_class.page_size = post_number
 
         query_set = Post.objects.all()
 
@@ -228,6 +256,14 @@ class PostSearchOrderView(APIView):
                     {"message": "No Data"}, status=status.HTTP_201_CREATED
                 )
 
-        serializers = PostListSerializer(query_set, many=True)
+        page = self.paginate_queryset(query_set)
+        serializer = None
 
-        return Response(serializers.data, status=status.HTTP_200_OK)
+        if page is not None:
+            serializer = self.get_paginated_response(
+                self.serializer_class(page, many=True).data
+            )
+        else:
+            serializer = self.serializer_class(query_set, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
