@@ -138,3 +138,45 @@ class DeletePostView(APIView):
         post_obj.save()
 
         return Response({"message": "SUCCESS"}, status=status.HTTP_200_OK)
+
+
+@permission_classes((AllowAny,))
+class DetailPostView(APIView):
+    def get(self, request, post_id):
+        """
+        게시글 상세 보기 api.
+        """
+        post_obj = Post.objects.get(id=post_id)
+        post_obj.view_count = post_obj.view_count + 1
+        post_obj.save()
+        serializer = PostSerializer(post_obj)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@permission_classes((AllowAny,))
+class LikeCountPostView(APIView):
+    def get(self, request, post_id):
+        """
+        좋아요 추가 삭제 api.
+        """
+        user_id = User.objects.get(email=request.user).id
+        result = Post.objects.filter(id=post_id, like_count__in=[user_id])
+        post_obj = Post.objects.get(id=post_id)
+
+        print("result는 ", result)
+
+        if result:
+            """
+            좋아요를 이미 눌렀으면 좋아요 취소
+            """
+            post_obj.like_count.remove(user_id)
+        else:
+            """
+            좋아요 생성
+            """
+            post_obj.like_count.add(user_id)
+
+        post_obj.save()
+
+        return Response({"message": "SUCCESS"}, status=status.HTTP_200_OK)
