@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
-from .serializers import PostSerializer
+from .serializers import PostListSerializer, PostSerializer
 import json
 import bcrypt
 import re
@@ -180,3 +180,15 @@ class LikeCountPostView(APIView):
         post_obj.save()
 
         return Response({"message": "SUCCESS"}, status=status.HTTP_200_OK)
+
+
+@permission_classes((AllowAny,))
+class PostListView(APIView):
+    def get(self, request):
+        """
+        게시글 목록 api.
+        """
+        query_set = Post.objects.all()
+        serializers = PostListSerializer(query_set, many=True)
+
+        return Response(serializers.data, status=status.HTTP_200_OK)
