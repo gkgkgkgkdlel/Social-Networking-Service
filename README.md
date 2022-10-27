@@ -8,7 +8,7 @@
 5. [API Endpoints]
 
 
-# 🚀 ecommerce crud api 서비스
+# 🚀 social networking crud api 서비스
 - 
 
 # 📆 개발 기간
